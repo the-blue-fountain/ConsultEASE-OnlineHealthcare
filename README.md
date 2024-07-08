@@ -49,5 +49,5 @@ ConsultEASE is designed to bridge the gap between doctors and patients seamlessl
 
 ### Aritra Maji
 - **Role**: Backend Developer
-- **GitHub**: [kalbaisakhi](https://github.com/kalbaisakhi)
+- **GitHub**: [kalbaisakhi](https://github.com/kalbaisakhi)....(my Insitute GitHub ID)
 
