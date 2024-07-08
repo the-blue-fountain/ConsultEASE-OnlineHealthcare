@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+    
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .no-scrollbar {
+        -ms-overflow-style: none;  
+        scrollbar-width: none; 
+  }
+}
+
+@layer utilities {
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    .mini-scrollbar::-webkit-scrollbar {
+      scrollbar-width: thin;         
+    }
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px; /* Width of vertical scrollbar */
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background-color: #4d1d9545; /* Color of scrollbar track */
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #4c1d95; /* Color of scrollbar thumb */
+    border-radius: 3px; /* Radius of scrollbar thumb */
+  }

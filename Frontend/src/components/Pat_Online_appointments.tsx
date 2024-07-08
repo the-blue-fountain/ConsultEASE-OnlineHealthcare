@@ -1,0 +1,287 @@
+import {
+    
+  BookX,
+    Clock10Icon,
+    EyeIcon,
+    PencilLineIcon,
+    SquareCheckBig,
+    
+  } from "lucide-react";
+import {
+    Card,
+    CardHeader,   
+    Typography,  
+    CardBody,
+  } from "@material-tailwind/react";
+
+import { useState,useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { doctorFullInfotype } from "../InputTypes/info";
+import axios from "axios";
+import { BACKEND_URL } from "../config";
+import { convert } from "./Pat_Appointments";
+import { ImagePopupButton2 } from "./PopUp";
+import { SkeletonLoader2 } from "./Skeleton2";
+
+type onlineappointmentType={
+  id:string,
+  patientId:string,
+  doctorId:string,
+  Symptoms:string,
+  appointment_date:string,
+  appointment_time:string,
+  feedback:number,
+  completed:boolean,
+  confirmed:boolean,
+  rejected:boolean,
+  feedback_given:boolean,
+  prescription:string,
+  meeting_link:string
+}
+   
+  const TABLE_HEAD = ["Doctor Name", "Specialization", "Status",  "Meeting Link","Date and Time", "Prescription", "Action"]
+   
+   
+  export const Pat_Online_appoinments=()=>{
+    const [loading,setLoading]=useState(true);
+    const [appointments,setAppointments]=useState<onlineappointmentType[]>([]);
+    const [doclist,setDoclist]=useState<{[key:string]:doctorFullInfotype}>({});
+    const [status,setStatus]=useState<{[key:string]:string}>({});
+    const currentdate=new Date();
+    const navigate=useNavigate();
+
+    useEffect(()=>{
+      axios.get(`${BACKEND_URL}/api/v1/patient/book/online/appointments`,{
+        headers:{
+          'Authorization':`Bearer ${localStorage.getItem('token')}`
+        }
+      }).then((res)=>{
+        //console.log(res.data);
+        const sortedAppointments = res.data.sort((a:onlineappointmentType, b:onlineappointmentType) => {
+          // Convert appointment_date strings to Date objects
+          const dateA = new Date(a.appointment_date).getTime();
+          const dateB = new Date(b.appointment_date).getTime();
+          // Compare appointment dates
+          return dateB - dateA;
+        });
+        setAppointments(sortedAppointments);
+        setLoading(false);
+      })
+
+    },[]);
+
+    useEffect(()=>{
+      const fetchDoctors = async (docId: string) => {
+        try {
+          const res = await axios.get(`${BACKEND_URL}/api/v1/doctor/get/${docId}`);
+          setDoclist(prev => ({ ...prev, [docId]: res.data }));
+        } catch (error) {
+          console.error('Error fetching doctor info:', error);
+        }
+      }
+      appointments.forEach(appointment => {
+        if(!doclist[appointment.doctorId]){
+          fetchDoctors(appointment.doctorId);
+        }
+        if (appointment.completed) {
+          setStatus(prev => ({ ...prev, [appointment.id]: 'Completed' }));
+        } else if (appointment.confirmed) {
+          setStatus(prev => ({ ...prev, [appointment.id]: 'Confirmed' }));
+        } else if (appointment.rejected) {
+          setStatus(prev => ({ ...prev, [appointment.id]: 'Rejected' }));
+        } else {
+          setStatus(prev => ({ ...prev, [appointment.id]: 'Pending' }));
+        }
+      });
+    },[appointments]);
+
+    function fetchdate(appointment_date:string):string{
+      const date=appointment_date.split('T')[0];
+      return date;
+    }
+    function fetchtime(time24:string):string{
+      var splitTime = time24.split(":");
+      var hours = parseInt(splitTime[0]);
+      var minutesInt = parseInt(splitTime[1]);
+
+      // Determine whether it's AM or PM
+      var period = hours < 12 ? "AM" : "PM";
+
+      // Convert hours to 12-hour format
+      hours = hours % 12;
+      hours = hours ? hours : 12; // 0 should be converted to 12
+
+      // Add leading zero to minutes if necessary
+      var minutes = minutesInt < 10 ? "0" + minutesInt : minutesInt;
+
+      // Return the formatted time
+      return hours + ":" + minutes + " " + period;
+    }
+    function feedback_button(appointment_date:string):boolean{
+      const date=new Date(appointment_date);
+      const thirtyDaysInMilliseconds = 30 * 24 * 60 * 60 * 1000;
+      const differenceInMilliseconds = currentdate.getTime() - date.getTime();
+      if(differenceInMilliseconds<=thirtyDaysInMilliseconds) return true;
+      else return false;
+    }
+    async function handleDelete(appointmentid:string){
+      try{
+        const response=await axios.delete(`${BACKEND_URL}/api/v1/patient/book/online/delete/${appointmentid}`,{
+          headers:{
+            'Authorization':`Bearer ${localStorage.getItem('token')}`
+          }
+        })
+        const json=response.data;
+        if(json.message){
+          alert(json.message);
+        }
+        window.location.reload();
+      }catch(e){
+        console.error("Error deleting appointment",e);
+      }
+
+    }
+
+
+    if(loading){
+      return <SkeletonLoader2 />
+    }
+
+    return (
+(<Card className="h-full w-full mx-2"  placeholder={undefined} onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined}>
+  <CardHeader floated={false} shadow={false}  placeholder={undefined} onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined}>
+    <div className="flex items-center justify-between ">
+      <div>
+        <Typography className="text-[20px] font-sans font-bold text-violet-900"  placeholder={undefined} onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined}>
+          Requested Appointments
+        </Typography>
+        <Typography color="gray" className="font-sans"  placeholder={undefined} onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined}>
+          See information about all booked appointments
+        </Typography>
+      </div>
+    </div>
+  </CardHeader>
+  <CardBody className="rounded-none shadow-none border-none px-0 pb-0"  placeholder={undefined} onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined}>
+    <div className="max-h-[584px] overflow-auto no-scrollbar">
+      <table className="mt-4 w-full min-w-max table-auto text-left">
+        <thead>
+          <tr>
+            {TABLE_HEAD.map((head) => (
+              <th
+                key={head}
+                className="cursor-pointer border-y border-blue-gray-100 bg-blue-gray-50/50 p-3 border-r-[2px] border-violet-700 transition-colors bg-violet-900"
+              >
+                <Typography
+                  className="flex items-center justify-between gap-2 font-sans font-bold text-[14px] text-white leading-none"  placeholder={undefined} onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined}                >
+                  {head}{" "}
+                </Typography>
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="px-0">
+          {appointments.map(
+            (appointment) => {
+              const classes = "p-2 border-b border-violet-200 bg-violet-50";
+              if(!doclist[appointment.doctorId]) {
+                return <div>Null</div>
+              }
+              return (
+                <tr key={appointment.id}>
+                  <td className={classes}>
+                    <div className="flex items-center">
+                      <div className="flex flex-col">
+                        <Typography
+                          className="font-sans font-bold text-violet-900 text-[15px]"  placeholder={undefined} onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined}                        >
+                          {doclist[appointment.doctorId].name}
+                        </Typography>
+                        <Typography
+                          className="font-sans font-semibold text-violet-900 opacity-65 text-[13px]"  placeholder={undefined} onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined}                        >
+                           {doclist[appointment.doctorId].experience} Years of Experience | Rating: {doclist[appointment.doctorId].rating.toFixed(1)} / 5.0
+                        </Typography>
+                      </div>
+                    </div>
+                  </td>
+                  <td className={classes}>
+                    <div className="flex flex-col">
+                      <Typography className="font-sans font-bold text-violet-900 text-[14px]"  placeholder={undefined} onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined}>
+                      {convert(doclist[appointment.doctorId].specialization)}
+                      </Typography>
+                    </div>
+                  </td>
+                  <td className={classes}>
+                    <div className="content-center min-w-[30px]">
+                      <div
+                        className={`${
+                          status[appointment.id] === 'Confirmed' ? 'bg-green-200 text-green-900' :
+                                status[appointment.id] === 'Rejected' ? 'bg-red-200 text-red-900' :
+                                  status[appointment.id] === 'Completed' ? 'bg-violet-200 text-violet-900' :
+                                    status[appointment.id] === 'Pending' ? 'bg-gray-200 text-gray-900' :
+                                      ''
+                          } font-sans font-semibold text-[13.5px] py-1.5 px-3 w-[120px] text-center rounded-2xl hover:scale-105 align-middle `}>
+                        {status[appointment.id]}
+                      </div>
+                    </div>
+                  </td>
+                  <td className={classes}>
+                  {(status[appointment.id] === 'Confirmed') && <div className="w-[200px] h-7 flex flex-row flex-wrap bg-violet-100 rounded-full shadow-md">
+                    <button className="bg-violet-700 hover:bg-violet-900 text-white font-bold py-0.5 px-4 h-7 rounded-full align-right text-center" onClick={() => { window.location.href = appointment.meeting_link; }}>
+                      Join
+                    </button>
+                    <p className="px-2 py-1 text-sm font-sans font-semibold text-violet-700 text-[13px]">{appointment.meeting_link.split('/').pop()}</p>
+                  </div>}
+                  {(status[appointment.id] === 'Completed') && <div className="w-[200px] h-7 flex flex-row flex-wrap bg-gray-100 rounded-full shadow-md">
+                    <button className="bg-gray-400 text-white font-bold py-0.5 px-2 h-7 rounded-full align-right text-center">
+                      Expired
+                    </button>
+                    <p className="px-2 py-1 text-sm font-sans font-semibold text-gray-500 text-[13px]">{appointment.meeting_link.split('/').pop()}</p>
+                  </div>}
+                  </td>
+                  <td className={classes}>
+                    <Typography
+                      variant="small"
+                      color="blue-gray"
+                      className="font-sans font-semibold flex text-[13px]"  placeholder={undefined} onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined}                    >
+                      <Clock10Icon className="h-5 w-5 mr-1.5 mt-0.5" />
+                      {status[appointment.id] === 'Confirmed' || status[appointment.id] === 'Completed' ? `${fetchdate(appointment.appointment_date)} | ${fetchtime(appointment.appointment_time)}` : `${fetchdate(appointment.appointment_date)} | --`}
+                    </Typography>
+                  </td>
+                  <td className={classes + ' items-center content-center align-middle justify-center bg-violet-50'}>
+                    {(status[appointment.id]==='Completed' && appointment.prescription!=null)? <ImagePopupButton2 imageUrl={appointment.prescription}/>:<button className="text-gray-800 bg-gray-300 p-2 h-[32px] rounded-full" disabled><EyeIcon className="h-[16px] w-[16px]"/></button>}
+                    
+                    </td>
+                    <td className={classes + ' items-center content-center align-middle justify-center'}>
+                    {(status[appointment.id] === 'Pending') &&
+                      <button className="hover:scale-110 h-4 justify-center flex flex-row " onClick={()=>handleDelete(appointment.id)}>
+                      <BookX className="h-5 w-5 mr-0.5 align-middle"/>
+                      <div>Cancel</div>
+                      </button>}
+                      {(status[appointment.id] === 'Completed' && feedback_button(appointment.appointment_date) ) &&
+                      <button  className="hover:scale-110 justify-center h-4 flex flex-row " onClick={()=>{
+                        if(!appointment.feedback_given){
+                          navigate(`/pat/online/feedback/${appointment.id}`)
+                        }
+                        }}>
+                        <div className="flex flex-row">
+                          {appointment.feedback_given === false ? (
+                            <div className="bg-violet-700 text-white rounded-md flex items-center justify-center mt-0.5 mr-0.5 w-6 h-6">
+                              <PencilLineIcon className="h-4 w-4 align-middle" />
+                            </div>
+                          ) : (
+                            <SquareCheckBig className="h-5 w-5 mt-0.5 mr-0.5 align-middle" />
+                          )}
+                          <div>Feedback</div>
+                        </div>
+                    </button>}
+                  </td>
+                </tr>
+              );
+            },
+          )}
+        </tbody>
+      </table>
+    </div>
+  </CardBody>
+</Card>)
+    );
+  }

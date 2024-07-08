@@ -1,0 +1,24 @@
+{
+    "age":48,
+    "gender":"M",
+    "mobile":"9474410657",
+    "latitude":22.5218,
+    "longitude":88.3647,
+    "specialization":"NL",
+    "experience":"15",
+    "clinic":"Apollo",
+    "fee":900,
+    "clinic_days":["mon","tue","thu"]
+}
+
+{
+    "name":"Dr.Naresh Trehan",
+    "email":"2digoo@gmail.com",
+    "password":"12Aeogwe",
+    "type":"doctor"
+}
+
+http://localhost:3000/api/v1/auth/signup
+
+http://localhost:3000/api/v1/doctor/details/add
+

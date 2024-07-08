@@ -1,0 +1,96 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Patient{
+  id String @id @default(uuid())
+  email String @unique
+  mobile String?
+  name String
+  password String
+  age Int?
+  gender String?
+  latitude Float?
+  longitude Float?
+  profile_pic String?
+  appointments Offline_Appointment[]
+  online_appointments Online_Appointment[]
+}
+
+model Doctor{
+  id String @id @default(uuid())
+  email String @unique
+  mobile String?
+  name String
+  password String
+  age Int?
+  gender String?
+  latitude Float?
+  longitude Float?
+  specialization String?
+  clinic String?
+  experience String?
+  rating Float @default(0)
+  numRatings Int @default(0)
+  fee Int?
+  online_fee Int?
+  clinic_days String[]
+  profile_pic String?
+  medical_certificate String?
+  appointments Offline_Appointment[]
+  online_appointments Online_Appointment[]
+}
+model Offline_Appointment{
+  id String @id @default(uuid())
+  patient Patient @relation(fields:[patientId],references: [id])
+  patientId String 
+  doctor Doctor @relation(fields:[doctorId],references: [id])
+  doctorId String 
+  Symptoms String?
+  feedback Float?
+  feedback_given Boolean @default(false)
+  punctuality String?
+  clarity String?
+  Comfort String?
+  Communication String?
+  Comments String?
+  rejected Boolean @default(false)
+  completed Boolean @default(false)
+  confirmed Boolean @default(false)
+  appointment_date DateTime @db.Date
+  appointment_time String?
+}
+
+model Online_Appointment{
+  id String @id @default(uuid())
+  patient Patient @relation(fields:[patientId],references: [id])
+  patientId String 
+  doctor Doctor @relation(fields:[doctorId],references: [id])
+  doctorId String
+  Symptoms String?
+  feedback Float?
+  feedback_given Boolean @default(false)
+  punctuality String?
+  clarity String?
+  Comfort String?
+  Communication String?
+  Comments String?
+  rejected Boolean @default(false)
+  completed Boolean @default(false)
+  confirmed Boolean @default(false)
+  appointment_date DateTime @db.Date
+  appointment_time String?
+  meeting_link String?
+  prescription String?
+}
